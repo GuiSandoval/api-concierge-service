@@ -3,7 +3,7 @@ date_default_timezone_set('America/Belem');
 
 header("Access-Control-Allow-Origin: *");
 header("meta charset=UTF-8");
-// header("Content-Type: application/json; charset=UTF-8");
+header("Content-Type: application/json; charset=UTF-8");
 header("Cache-Control: no-cache, no-store, must-revalidate"); // limpa o cache
 header("Access-Control-Allow-Origin: *");
 
@@ -48,8 +48,12 @@ if (isset($_GET['pesquisa'])) {
             http_response_code(200);
             //echo json_encode($dadosVisit,JSON_PRETTY_PRINT);
             //print_r($res_send);
-
-            echo json_encode($res_send, JSON_PRETTY_PRINT);
+            $msg = array(
+                "status" => "Sucesso",
+                "dados" => $res_send
+            );
+            echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            // echo json_encode($res_send, JSON_PRETTY_PRINT);
             //echo json_encode($arr);
         } catch (Exception $e) {
             $err = $e->getMessage();
@@ -60,7 +64,12 @@ if (isset($_GET['pesquisa'])) {
             echo json_encode($msg_err);
         }
     } else {
-        echo json_encode("CPF ou Nome não existe", JSON_UNESCAPED_UNICODE);
+        $msg = array(
+            "status" => "Erro",
+            "dados" => "CPF ou Nome não existe!"
+        );
+        echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        // echo json_encode("CPF ou Nome não existe", JSON_UNESCAPED_UNICODE);
     }
 }
 /** ************************************************************************************ */
@@ -87,10 +96,20 @@ if (isset($_GET['cadastro'])) {
             // print_r ($query);
             if ($cadastro == true) {
                 http_response_code(201);
-                echo json_encode('Cadastro realizado com sucesso');
+                $msg = array(
+                    "status" => "Sucesso",
+                    "dados" => "Cadastro realizado com sucesso!"
+                );
+                echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                // echo json_encode('Cadastro realizado com sucesso');
             } else {
                 http_response_code(500);
-                echo json_encode('O CPF ' . $id_cpf . ' já está cadastrado!');
+                $msg = array(
+                    "status" => "Erro",
+                    "dados" => "O CPF $id_cpf já está cadastrado!"
+                );
+                echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                // echo json_encode('O CPF ' . $id_cpf . ' já está cadastrado!');
             }
         }
     }
@@ -108,10 +127,20 @@ if (isset($_GET['alterar'])) {
 
     if ($alterar == true) {
         http_response_code(202);
-        echo json_encode('Visitante Alterado com Sucesso');
+        $msg = array(
+            "status" => "Sucesso",
+            "dados" => "Visitante Alterado com Sucesso!"
+        );
+        echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        // echo json_encode('Visitante Alterado com Sucesso');
     } else {
         http_response_code(500);
-        echo json_encode('CPF não existente');
+        $msg = array(
+            "status" => "Erro",
+            "dados" => "Erro ao alterar CPF!"
+        );
+        echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        // echo json_encode('CPF não existente');
     }
 }
 /** ************************************************************************************ */
@@ -175,7 +204,11 @@ if (isset($_GET['pesquisaLocal'])){
             // $res_send = utf8_string_array_encode($res_send);
             // $res_send = utf8_encode($res_send);
             // echo $res_send;
-            echo json_encode($res_send,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            $msg = array(
+                "status" => "Sucesso",
+                "dados" => $res_send
+            );
+            echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             //echo json_encode($arr);
         } catch (Exception $e) {
             $err = $e->getMessage();
@@ -193,28 +226,108 @@ if (isset($_GET['pesquisaLocal'])){
 }
 
 /** ************************************************************************************ */
-/** **************************** PESQUISAR LOCAIS ************************************** */
+/** **************************** PESQUISAR SERVIDOR ************************************** */
 /** ************************************************************************************ */
 if(isset($_GET['pesquisaServ'])){
     // $postdata = file_get_contents("php://input");
     // $query = json_decode($postdata,true);
     $query = $_GET['pesquisaServ'];
-    $dados = $dat->pesquisaServ($connectC,$query);
-    if($dados == false){
-        echo 'deu ruim';
+    $dadosServ = $dat->pesquisaServ($connectC,$query);
+
+
+    if($dadosServ != false){
+       
+        if (count($dadosServ)) {
+            foreach ($dadosServ  as $dados) {
+                $res_send[] = array(
+                    'id_cpf' => $dados['id_cpf'],
+                    'nome_serv' => $dados['nome_serv'],
+                    'email_serv' => $dados['email_serv'],
+                    'id_lotacao' => $dados['id_lotacao']
+                );
+            }
+        }
+        try {
+            //array_push($send['pesquisa'], $res_send);
+            //array_push($send['pesquisa'], $dadosServ);
+            http_response_code(200);
+            //echo json_encode($dadosServ,JSON_PRETTY_PRINT);
+            //print_r($res_send);
+            // print_r($res_send);
+
+            // print_r($res_send);
+            // $res_send = utf8_encode($res_send);
+            // $res_send = utf8_string_array_encode($res_send);
+            // $res_send = utf8_encode($res_send);
+            // echo $res_send;
+            $msg = array(
+                "status" => "Sucesso",
+                "dados" => $res_send
+            );
+            echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            //echo json_encode($arr);
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+            $msg_err = 'Erro na pesquisa: ' . $err . "\n";
+            // echo $msg_err;
+            // set response code - 200 OK
+            http_response_code(500);
+            echo json_encode($msg_err);
+        }
+        // // print_r($dados);
+        // // echo json_encode($dados);
+        // // echo json_encode($dados, JSON_PRETTY_PRINT);
+        // $msg = array(
+        //     "status" => "Sucesso",
+        //     "dados" => $dados
+        // );
+        // echo json_encode($msg, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE);
     }else{
-        // print_r($dados);
-        // echo json_encode($dados);
-        echo json_encode($dados, JSON_PRETTY_PRINT);
+        $msg = array(
+            "status" => "Erro",
+            "dados" => "Servidor não existe"
+        );
+        echo json_encode($msg, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE);
+        
 
     }
 }
 /** ************************************************************************************ */
-/** **************************** CADASTRA VISITA *************************************** */
+/** **************************** CADASTRO VISITA *************************************** */
 /** ************************************************************************************ */
 if (isset($_GET['cadastroVisita'])){
     $postdata = file_get_contents("php://input");
     $query = json_decode($postdata,true);
+    $serv = $query['id_cpf_visitado'];
+    $visit = $query['id_cpf'];
+    $lotac = $query['id_lotacao_visita'];
+    $vServ = $dat->pesquisaServ($connectC,$serv);
+    $vVisit = $dat->pesquisaVisitante($connect,$connectC,$visit);
+    $vLotac = $dat->pesquisaLocal($connectC,$lotac);
+    if($vServ == false){
+        $msg = array(
+            "status" => "Erro",
+            "mensagem" => "Esse Servidor não existe"
+        );
+        echo json_encode($msg,JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($vVisit == false){
+        $msg = array(
+            "status" => "Erro",
+            "mensagem" => "Deu um erro ao verificar Visitante!"
+        );
+        echo json_encode($msg,JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($vLotac == false){
+        $msg = array(
+            "status" => "Erro",
+            "mensagem" => "Local de Visita é inválido!"
+        );
+        echo json_encode($msg,JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     //adicionando hora e data formatado. 
     $query['data_entrada'] = date('d-m-Y');
     $query['hora_entrada'] = date('H:i:s');
@@ -224,11 +337,29 @@ if (isset($_GET['cadastroVisita'])){
     
     $dados = $dat->cadastroVisita($connect,$query);
     if($dados == true){
-        echo 'deu certo';
+        $msg = array(
+            "status" => "Sucesso",
+            "mensagem" => "Visita Cadastrada Com Sucesso!"
+        );
+        echo json_encode($msg,JSON_UNESCAPED_UNICODE || JSON_PRETTY_PRINT);
+        // echo json_encode('deu certo');
     }else{
-        echo 'Deu ruim';
+        $msg = array(
+            "status" => "Erro",
+            "mensagem" => "Ops! Ocorreu um erro ao cadastrar Visita, Tente novamente!"
+        );
+        echo json_encode($msg,JSON_UNESCAPED_UNICODE || JSON_PRETTY_PRINT);
+        // echo json_encode('Deu ruim');
     }
     // print_r($query);
+
+}
+/** ************************************************************************************ */
+/** **************************** LISTAR VISITA *************************************** */
+/** ************************************************************************************ */
+if (isset($_GET['pesquisaVisita'])){
+    $query = $_GET['pesquisaVisita'];
+    
 
 }
 
