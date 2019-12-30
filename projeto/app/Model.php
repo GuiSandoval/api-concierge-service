@@ -95,6 +95,7 @@ class Dados
 
         return $resultFinal;
     }
+
     //FUNÇÃO ALTERAR VISITANTE
     public function alterarVisitante($connect, $connectc, $query)
     {
@@ -153,6 +154,7 @@ class Dados
 
         return $resultFinal;
     }
+
     /*
     public function logarUsuario($connect,$usuario,$hashSenha){
         // print_r($usuario);
@@ -170,7 +172,7 @@ class Dados
     public function pesquisaLocal($connectC, $query)
     {
         try { //select * from tb_lotacao where desc_lotacao like '%sec%' or sigla_lotacao like '%sec%';
-            $sqlc = "select * from tb_lotacao where desc_lotacao like '%" . $query . "%' or sigla_lotacao like '%" . $query . "%';";
+            $sqlc = "select * from tb_lotacao where desc_lotacao like '%" . $query . "%' or sigla_lotacao like '%" . $query . "%' or id_lotacao like '%" . $query . "%';";
             // $sqlc = "select * from tb_lotacao where local_lotacao like '%" . $query . "%' ;";
             $objc = $connectC->prepare($sqlc);
             $resultc = ($objc->execute()) ? $objc->fetchAll() : false;
@@ -180,8 +182,7 @@ class Dados
         return $resultc;
     }
     //FUNÇÃO CADASTRAR VISITAS
-    public function cadastroVisita($connect, $query)
-    {
+    public function cadastroVisita($connect, $query){
 
         $id_cpf = $query['id_cpf'];
         $id_lotacao_visita = $query['id_lotacao_visita'];
@@ -208,7 +209,7 @@ class Dados
         try {
             $stmt = $connect->prepare($sql);
             $stmt->bindValue(':id_cpf', $id_cpf, PDO::PARAM_STR);
-            $stmt->bindValue(':id_lotacao_visita', $id_lotacao_visita, PDO::PARAM_INT);
+            $stmt->bindValue(':id_lotacao_visita', $id_lotacao_visita, PDO::PARAM_STR);
             $stmt->bindValue(':data_entrada', $data_entrada, PDO::PARAM_STR);
             $stmt->bindValue(':hora_entrada', $hora_entrada, PDO::PARAM_STR);
             $stmt->bindValue(':id_cpf_visitado', $id_cpf_visitado, PDO::PARAM_STR);
@@ -229,7 +230,6 @@ class Dados
 
         return $resultFinal;
     }
-
     //FUNÇÃO PESQUISAR SERVIDOR
     public function pesquisaServ($connectC,$query){
         try {
@@ -241,6 +241,226 @@ class Dados
         }
         return $result;
     }
+    //FUNÇÂO PESQUISAR VISITA
+    public function pesquisaVisita($connect,$query){
+        try {
+            $sql = "SELECT V.*, L.sigla_lotacao, L.local_lotacao, L.desc_lotacao , VI.nome, S.nome_serv
+            FROM tb_visita AS V
+            INNER JOIN db_coorporativo.tb_lotacao AS L ON V.id_lotacao_visita = L.id_lotacao
+            INNER JOIN tb_visitante AS VI ON V.id_cpf= VI.id_cpf
+            INNER JOIN db_coorporativo.tb_servidores AS S ON V.id_cpf_visitado = S.id_cpf;";
+            $obj = $connect->prepare($sql);
+            $result = ($obj->execute()) ? $obj->fetchAll() : false;
+        } catch (PDOException $e) {
+            echo 'Erro: ',  $e->getMessage(), "\n";
+        }
+        return $result;
+    }
+    //FUNÇÂO PESQUISAR USUARIO
+    public function pesquisaUsuario($connect,$query){
+        try {
+            $sql = "SELECT * FROM tb_usuario WHERE id_cpf LIKE '%" . $query . "%' OR nome LIKE '%" . $query . "%' OR usuario LIKE '%" . $query . "%';";
+            $obj = $connect->prepare($sql);
+            $result = ($obj->execute()) ? $obj->fetchAll() : false;
+        } catch (PDOException $e) {
+            echo 'Erro: ',  $e->getMessage(), "\n";
+        }
+        return $result;
+    }
+    //FUNÇÃO CADASTRAR Usuario
+    public function cadastroUsuario($connect, $query)
+    {
+        $id_cpf = $query['id_cpf'];
+        $nome = $query['nome'];
+        $usuario = $query['usuario'];
+        $hashSenha = $query['hashSenha'];
+        $id_tipo_usuario = $query['id_tipo_usuario'];
+        $id_sede = $query['id_sede'];
+        $tele = empty($query['telefone']) ? null : $query['telefone'];
+        $email = empty($query['email']) ? null : $query['email'];
+
+        /****************************************************************************************** */
+        /****************************** CONFERE NO  BANCO ********************************* */
+        /****************************************************************************************** */
+        $sql = "select * from tb_usuario where id_cpf like '%" . $id_cpf . "%'; ";
+        $obj = $connect->prepare($sql);
+        $result = ($obj->execute()) ? $obj->fetchAll() : false;
+        // SE TIVER ALGUM CPF FOR IGUAL NÃO CRIARA UM NOVO VISITANTE, MAS SE NÃO EXISTIR CRIARA UM NOVO VISITANTE NO BANCO DB_VISITANTES.
+        if (count($result)) {
+            $resultFinal = false;
+        } else {
+            try {
+                $sqlV = 'INSERT INTO tb_usuario (id_cpf, nome, usuario,email,telefone,id_tipo_usuario,id_sede,hashSenha) 
+                VALUES(:id_cpf, :nome, :usuario, :email, :telefone, :id_tipo_usuario, :id_sede, :hashSenha)';
+                $obj = $connect->prepare($sqlV);
+                $obj->execute(array(
+                    ':id_cpf' => $id_cpf,
+                    ':nome' => $nome,
+                    ':usuario' => $usuario,
+                    ':email' => $email,
+                    ':telefone' => $tele,
+                    ':id_tipo_usuario' => $id_tipo_usuario,
+                    ':id_sede' => $id_sede,
+                    ':hashSenha' => $hashSenha
+                ));
+                /*
+                $sqlV = "insert into tb_visitante (id_cpf, nome, telefone, ci, matricula, cargo, foto_visit,orgao_origem) values('" . $id_cpf . "','" . $nome . "','" . $tele . "','" . $ci . "','" . $matricula . "','" . $cargo . "','" . $foto_visit . "','" . $orgao_origem . "')";
+                $obj = $connect->prepare($sqlV);*/
+                // if ($obj->execute()) {
+                if ($obj->rowCount() > 0) {
+                    $resultFinal = true;
+                } else {
+                    throw new PDOException("Erro ao tentar efetivar cadastro");
+                }
+                /*} else {
+                    throw new PDOException("Erro: Não foi possível executar a declaração sql");
+                }*/
+            } catch (PDOException $e) {
+                echo "Erro: " . $e->getMessage();
+                exit;
+            }
+        }
+
+        return $resultFinal;
+    }
+    //FUNÇÃO DELETAR Usuario
+    public function deletarUsuario($connect, $id_cpf)
+    {
+        try {
+            $stmt = $connect->prepare('DELETE FROM tb_usuario WHERE id_cpf = :id_cpf');
+            $stmt->bindParam(':id_cpf', $id_cpf);
+            $stmt->execute();
+
+            // echo $stmt->rowCount(); 
+            if ($stmt->rowCount() > 0) {
+                $resultFinal = true;
+            } else {
+                $resultFinal = false;
+            }
+        } catch (Exception $e) {
+            echo "Erro: " . $e->getMessage();
+        }
+
+        return $resultFinal;
+    }
+    //FUNÇÃO ALTERAR USUARIO
+    public function alterarUsuario($connect, $query)
+    {
+        $id_cpf = $query['id_cpf'];
+
+        $select = Dados::pesquisaUsuario($connect, $id_cpf);
+
+        if ($select == false) {
+            $resultFinal = false;
+        } else {
+            $id_cpf = $query['id_cpf'];
+            $usuario = $query['usuario'];
+            $hashSenha = $query['hashSenha'];
+            $id_tipo_usuario = $query['id_tipo_usuario'];
+            $id_sede = $query['id_sede'];
+            $tele = empty($query['telefone']) ? null : $query['telefone'];
+            $email = empty($query['email']) ? null : $query['email'];
+            
+            $sql = "update tb_usuario set telefone = ?, usuario = ?, hashSenha = ?, id_tipo_usuario = ?, id_sede = ? , email = ? where id_cpf = ?";
+
+            $statement = $connect->prepare($sql);
+
+            $statement->bindParam(1, $tele);
+            $statement->bindParam(2, $usuario);
+            $statement->bindParam(3, $hashSenha);
+            $statement->bindParam(4, $id_tipo_usuario);
+            $statement->bindParam(5, $id_sede);
+            $statement->bindParam(6, $email);
+            $statement->bindParam(7, $id_cpf);
+
+            $statement->execute();
+
+
+            // var_dump($statement);
+
+            $resultFinal = true;
+        }
+        return $resultFinal;
+    }
+    //FUNÇÂO PESQUISAR BLACK LIST
+    public function pesquisaBlackList($connect,$query){
+        try {
+            $sql = "SELECT B.*, V.nome  FROM tb_black_list AS B INNER JOIN tb_visitante as V ON B.id_cpf_visitante = V.id_cpf;";
+            // $sql = "SELECT * FROM tb_black_list WHERE id_cpf_visitante LIKE '%" . $query . "%';";
+            $obj = $connect->prepare($sql);
+            $result = ($obj->execute()) ? $obj->fetchAll() : false;
+        } catch (PDOException $e) {
+            echo 'Erro: ',  $e->getMessage(), "\n";
+        }
+        return $result;
+    }
+    //FUNÇÃO ADICIONAR BLACK LIST
+    public function adicionarBlackList($connect, $id_cpf,$data_entrada)
+    {   $id_black_list =  date("BHis");
+        // echo $data_entrada;
+        $data_saida = NULL;
+        // echo $id_black_list;
+
+        try {
+            $sql = "INSERT INTO tb_black_list (id_black_list,id_cpf_visitante,data_entrada,data_saida) 
+                    values (:id_black_list, :id_cpf_visitante, :data_entrada, :data_saida);";
+            $stmt = $connect->prepare($sql);
+            $stmt->bindParam(':id_black_list', $id_black_list);
+            $stmt->bindParam(':id_cpf_visitante', $id_cpf);
+            $stmt->bindParam(':data_entrada', $data_entrada);
+            $stmt->bindParam(':data_saida', $data_saida);
+            $stmt->execute();
+
+            $sqlc = "UPDATE tb_visitante set id_black_list = 1 where id_cpf = '$id_cpf';";
+            $stmtc = $connect->prepare($sqlc);
+            // $stmtc->bindParam(':id_cpf', $id_cpf);
+            $stmtc->execute();
+
+            // echo $stmt->rowCount(); 
+            // echo $stmtc->rowCount();
+
+            if (($stmt->rowCount() > 0) &&( $stmtc->rowCount() > 0)) {
+                $resultFinal = true;
+            } else {
+                $resultFinal = false;
+            }
+        } catch (PDOException $e) {
+            echo "Erro: " . $e->getMessage();
+            exit;
+        }
+
+        return $resultFinal;
+    }
+    //FUNÇÃO RETIRAR BLACK LIST
+    public function retirarBlackList($connect, $id_cpf,$data_saida){
+    // {   $id_black_list =  date("BHis");
+            // echo $data_entrada;
+            // $data_saida = NULL;
+            // echo $id_black_list;
+    
+            try {
+                $sql = "UPDATE tb_black_list SET data_saida = '$data_saida' WHERE id_cpf_visitante = '$id_cpf';";
+                $stmt = $connect->prepare($sql);
+                $stmt->execute();
+
+                $sqlc = "UPDATE tb_visitante set id_black_list = 0 where id_cpf = '$id_cpf';";
+                $stmtc = $connect->prepare($sqlc);
+                $stmtc->execute();
+    
+                // echo $stmt->rowCount(); 
+                if ($stmt->rowCount() > 0) {
+                    $resultFinal = true;
+                } else {
+                    $resultFinal = false;
+                }
+            } catch (PDOException $e) {
+                echo "Erro: " . $e->getMessage();
+                exit;
+            }
+    
+            return $resultFinal;
+    }
+        
     /*
 global $_DELETE = array();
 global $_PUT = array();
