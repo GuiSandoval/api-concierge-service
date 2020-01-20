@@ -2,6 +2,7 @@
 date_default_timezone_set('America/Belem');
 
 header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type");
 header("meta charset=UTF-8");
 header("Content-Type: application/json; charset=UTF-8");
 header("Cache-Control: no-cache, no-store, must-revalidate"); // limpa o cache
@@ -26,90 +27,128 @@ $url = $url1 . $url2[0];
 if (isset($_GET['pesquisa'])) {
     $query = $_GET['pesquisa'];
     $dadosVisit = $dat->pesquisaVisitante($connect, $connectC, $query);
-    // $send['pesquisa'] = array();
-    $res_send = array();
-    // print_r($dadosVisit);
-    // echo json_encode($dadosVisit);
     if ($dadosVisit != false) {
         if (count($dadosVisit)) {
             foreach ($dadosVisit  as $dados) {
-                if (isset($dados['nome'])) $nome = $dados['nome'];
-                if (isset($dados['nome_serv'])) $nome = $dados['nome_serv'];
-
-                // if (isset($dados['matricula']) && $dados['matricula'] == null) $matricula =' ';
-                if (isset($dados['matricula'])) $matricula = $dados['matricula'];
-                if (isset($dados['matricula_serv'])) $matricula = $dados['matricula_serv'];
-                if(empty($matricula)) $matricula = null;
-
-                if (isset($dados['ci'])) $ci = $dados['ci'];
-                if (isset($dados['ci_serv'])) $ci = $dados['ci_serv'];
-                if(empty($ci)) $ci = null;
-
-
-                if (isset($dados['telefone'])) $telefone = $dados['telefone'];
-                if (isset($dados['fone_serv'])) $telefone = $dados['fone_serv'];
-                if(empty($telefone)) $telefone = null;
-                
-                if (isset($dados['cargo'])) $cargo = $dados['cargo'];
-                if (isset($dados['id_cargo'])) $cargo = $dados['id_cargo'];
-                if(empty($cargo)) $cargo = null;
-
-                if (isset($dados['foto_visit'])) $foto_visit = $dados['foto_visit'];
-                if (isset($dados['foto_serv'])) $foto_visit = $dados['foto_serv'];
-                if(empty($foto_visit)) $foto_visit = null;
-                
-                isset($dados['id_black_list']) ? $id_black_list = $dados['id_black_list'] : $id_black_list=0;
-                isset($dados['orgao_origem']) ? $orgao_origem = $dados['orgao_origem'] : $orgao_origem=null;
-                // if(empty($dados['orgao_origem'])) $orgao_origem = null;
-
                 $res_send[] = array(
                     'id_cpf' => $dados['id_cpf'],
-                    'nome' => $nome,
-                    'matricula' => $matricula,
-                    'telefone' => $telefone,
-                    'ci' => $ci,
-                    'matricula' => $matricula,
-                    'cargo' => $cargo,
-                    'id_black_list' => $id_black_list,
-                    'foto_visit' => $foto_visit,
-                    'orgao_origem' => $orgao_origem
+                    'nome' => $dados['nome'],
+                    'matricula' => $dados['matricula'],
+                    'telefone' => $dados['telefone'],
+                    'ci' => $dados['ci'],
+                    'cargo' => $dados['cargo'],
+                    'id_black_list' => $dados['id_black_list'],
+                    'foto_visit' => $dados['foto_visit'],
+                    'orgao_origem' => $dados['orgao_origem'],
                 );
             }
         }
         try {
-            //array_push($send['pesquisa'], $res_send);
-            //array_push($send['pesquisa'], $dadosVisit);
             http_response_code(200);
-            //echo json_encode($dadosVisit,JSON_PRETTY_PRINT);
-            //print_r($res_send);
-            // $msg = array(
-            //     "status" => "Sucesso",
-            //     "dados" => $res_send
-            // );
-            // echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             echo json_encode($res_send, JSON_PRETTY_PRINT);
-            //echo json_encode($arr);
         } catch (Exception $e) {
             $err = $e->getMessage();
             $msg_err = 'Erro na pesquisa: ' . $err . "\n";
-            // echo $msg_err;
-            // set response code - 200 OK
+            // Error usuário nõa encontrado  - 500 
             http_response_code(500);
             echo json_encode($msg_err);
         }
     } else {
         http_response_code(501);
 
-        $msg = array(
-            "status" => "Erro",
-            "dados" => "CPF ou Nome não existe!"
-        );
+        $msg = "CPF ou Nome não existe!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         // echo json_encode("CPF ou Nome não existe", JSON_UNESCAPED_UNICODE);
     }
+
+
+    // $query = $_GET['pesquisa'];
+    // $dadosVisit = $dat->pesquisaVisitante($connect, $connectC, $query);
+    // // $send['pesquisa'] = array();
+    // $res_send = array();
+    // // print_r($dadosVisit);
+    // // echo json_encode($dadosVisit);
+    // if ($dadosVisit != false) {
+    //     if (count($dadosVisit)) {
+    //         foreach ($dadosVisit  as $dados) {
+    //             if (isset($dados['nome'])) $nome = $dados['nome'];
+    //             if (isset($dados['nome_serv'])) $nome = $dados['nome_serv'];
+
+    //             // if (isset($dados['matricula']) && $dados['matricula'] == null) $matricula =' ';
+    //             if (isset($dados['matricula'])) $matricula = $dados['matricula'];
+    //             if (isset($dados['matricula_serv'])) $matricula = $dados['matricula_serv'];
+    //             if (empty($matricula)) $matricula = '111';
+
+    //             if (isset($dados['ci_serv'])) $ci = $dados['ci_serv'];
+    //             if (isset($dados['ci'])) $ci = $dados['ci'];
+    //             if(empty($ci)) $ci = '222';
+
+
+    //             if (isset($dados['fone_serv'])) $telefone = $dados['fone_serv'];
+    //             if (isset($dados['telefone'])) $telefone = $dados['telefone'];
+    //             if(empty($telefone)) $telefone = '333';
+
+    //             if (isset($dados['cargo'])) $cargo = $dados['cargo'];
+    //             if (isset($dados['id_cargo'])) $cargo = $dados['id_cargo'];
+    //             if(empty($cargo)) $cargo = '444';
+
+    //             if (isset($dados['foto_visit'])) $foto_visit = $dados['foto_visit'];
+    //             if (isset($dados['foto_serv'])) $foto_visit = $dados['foto_serv'];
+    //             if (empty($foto_visit)) $foto_visit = ' 555';
+
+    //             isset($dados['id_black_list']) ? $id_black_list = $dados['id_black_list'] : $id_black_list=0;
+    //             isset($dados['orgao_origem']) ? $orgao_origem = $dados['orgao_origem'] : $orgao_origem=' 666';
+    //             // if(empty($dados['orgao_origem'])) $orgao_origem = null;
+
+    //             $res_send[] = array(
+    //                 'id_cpf' => $dados['id_cpf'],
+    //                 'nome' => $nome,
+    //                 'matricula' => $matricula,
+    //                 'telefone' => $telefone,
+    //                 'ci' => $ci,
+    //                 'matricula' => $matricula,
+    //                 'cargo' => $cargo,
+    //                 'id_black_list' => $id_black_list,
+    //                 'foto_visit' => $foto_visit,
+    //                 'orgao_origem' => $orgao_origem,
+    //                 'teste' => 'teste'
+    //             );
+    //         }
+    //     }
+    //     try {
+    //         //array_push($send['pesquisa'], $res_send);
+    //         //array_push($send['pesquisa'], $dadosVisit);
+    //         http_response_code(200);
+    //         //echo json_encode($dadosVisit,JSON_PRETTY_PRINT);
+    //         //print_r($res_send);
+    //         // $msg = array(
+    //         //     "status" => "Sucesso",
+    //         //     "dados" => $res_send
+    //         // );
+    //         // echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    //         echo json_encode($res_send, JSON_PRETTY_PRINT);
+    //         //echo json_encode($arr);
+    //     } catch (Exception $e) {
+    //         $err = $e->getMessage();
+    //         $msg_err = 'Erro na pesquisa: ' . $err . "\n";
+    //         // echo $msg_err;
+    //         // set response code - 200 OK
+    //         http_response_code(500);
+    //         echo json_encode($msg_err);
+    //     }
+    // } else {
+    //     http_response_code(501);
+
+    //     $msg = array(
+    //         "status" => "Erro",
+    //         "dados" => "CPF ou Nome não existe!"
+    //     );
+    //     echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    //     // echo json_encode("CPF ou Nome não existe", JSON_UNESCAPED_UNICODE);
+    // }
 }
 /** ************************************************************************************ */
-/** **************************** CADASTRO VISITANTE *********************************** */
+/** **************************** CADASTRO VISITANTE ************************************ */
 /** ************************************************************************************ */
 
 if (isset($_GET['cadastro'])) {
@@ -212,7 +251,7 @@ if (isset($_GET['deletar'])) {
 
 
 /** ************************************************************************************ */
-/** **************************** PESQUISAR LOCAL ************************************** */
+/** **************************** PESQUISAR LOCAL *************************************** */
 /** ************************************************************************************ */
 
 if (isset($_GET['pesquisaLocal'])) {
@@ -230,7 +269,9 @@ if (isset($_GET['pesquisaLocal'])) {
                 $res_send[] = array(
                     'id_lotacao' => $dados['id_lotacao'],
                     'sigla_lotacao' => $dados['sigla_lotacao'],
-                    'desc_lotacao' => $dados['desc_lotacao']
+                    'desc_lotacao' => $dados['desc_lotacao'],
+                    'id_unidade' => $dados['id_unidade'],
+                    'local_lotacao' => $dados['local_lotacao']
                 );
             }
         }
@@ -247,10 +288,7 @@ if (isset($_GET['pesquisaLocal'])) {
             // $res_send = utf8_string_array_encode($res_send);
             // $res_send = utf8_encode($res_send);
             // echo $res_send;
-            $msg = array(
-                "status" => "Sucesso",
-                "dados" => $res_send
-            );
+            $msg = $res_send;
             echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             //echo json_encode($arr);
         } catch (Exception $e) {
@@ -268,7 +306,7 @@ if (isset($_GET['pesquisaLocal'])) {
 }
 
 /** ************************************************************************************ */
-/** **************************** PESQUISAR SERVIDOR ************************************** */
+/** **************************** PESQUISAR SERVIDOR ************************************ */
 /** ************************************************************************************ */
 if (isset($_GET['pesquisaServ'])) {
     // $postdata = file_get_contents("php://input");
@@ -284,8 +322,12 @@ if (isset($_GET['pesquisaServ'])) {
                 $res_send[] = array(
                     'id_cpf' => $dados['id_cpf'],
                     'nome_serv' => $dados['nome_serv'],
-                    'email_serv' => $dados['email_serv'],
-                    'id_lotacao' => $dados['id_lotacao']
+                    // 'email_serv' => $dados['email_serv'],
+                    'id_lotacao' => $dados['id_lotacao_atual'],
+                    'sigla_lotacao' => $dados['sigla_lotacao'],
+                    'desc_lotacao' => $dados['desc_lotacao'],
+                    'matricula' => $dados['matricula_serv']
+
                 );
             }
         }
@@ -327,10 +369,7 @@ if (isset($_GET['pesquisaServ'])) {
         // echo json_encode($msg, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE);
     } else {
         http_response_code(508);
-        $msg = array(
-            "status" => "Erro",
-            "dados" => "Servidor não existe"
-        );
+        $msg = "Servidor não existe";
         echo json_encode($msg, JSON_PRETTY_PRINT || JSON_UNESCAPED_UNICODE);
     }
 }
@@ -346,27 +385,21 @@ if (isset($_GET['cadastroVisita'])) {
     $vServ = $dat->pesquisaServ($connectC, $serv);
     $vVisit = $dat->pesquisaVisitante($connect, $connectC, $visit);
     $vLotac = $dat->pesquisaLocal($connectC, $lotac);
-    if ($vServ == false) {
-        $msg = array(
-            "status" => "Erro",
-            "mensagem" => "Esse Servidor não existe"
-        );
+    if ($vServ == false) { 
+        http_response_code(512);
+        $msg =  "Esse Servidor não existe";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE);
         exit;
     }
     if ($vVisit == false) {
-        $msg = array(
-            "status" => "Erro",
-            "mensagem" => "Deu um erro ao verificar Visitante!"
-        );
+        http_response_code(513);
+        $msg ="Deu um erro ao verificar Visitante!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE);
         exit;
     }
     if ($vLotac == false) {
-        $msg = array(
-            "status" => "Erro",
-            "mensagem" => "Local de Visita é inválido!"
-        );
+        http_response_code(514);
+        $msg ="Local de Visita é inválido!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE);
         exit;
     }
@@ -379,17 +412,12 @@ if (isset($_GET['cadastroVisita'])) {
 
     $dados = $dat->cadastroVisita($connect, $query);
     if ($dados == true) {
-        $msg = array(
-            "status" => "Sucesso",
-            "mensagem" => "Visita Cadastrada Com Sucesso!"
-        );
+        $msg = "Visita Cadastrada Com Sucesso!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE || JSON_PRETTY_PRINT);
         // echo json_encode('deu certo');
     } else {
-        $msg = array(
-            "status" => "Erro",
-            "mensagem" => "Ops! Ocorreu um erro ao cadastrar Visita, Tente novamente!"
-        );
+        http_response_code(515);
+        $msg ="Ops! Ocorreu um erro ao cadastrar Visita, Tente novamente!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE || JSON_PRETTY_PRINT);
         // echo json_encode('Deu ruim');
     }
@@ -397,7 +425,7 @@ if (isset($_GET['cadastroVisita'])) {
 
 }
 /** ************************************************************************************ */
-/** **************************** LISTAR VISITA *************************************** */
+/** **************************** LISTAR VISITA ***************************************** */
 /** ************************************************************************************ */
 if (isset($_GET['pesquisaVisita'])) {
     $query = $_GET['pesquisaVisita'];
@@ -405,6 +433,7 @@ if (isset($_GET['pesquisaVisita'])) {
     // $send['pesquisa'] = array();
     $res_send = array();
     // print_r($dadosVisit);
+    // exit;
     // echo json_encode($dadosVisit);
     if ($dadosVisit != false) {
         if (count($dadosVisit)) {
@@ -413,7 +442,7 @@ if (isset($_GET['pesquisaVisita'])) {
                     'id_visita' => $dados['id_visita'],
                     'id_cpf' => $dados['id_cpf'],
                     'id_lotacao_visita' => $dados['id_lotacao_visita'],
-                    'data_entrada' => $dados['data_entrada'],
+                    'data_entrada' => $dat->data($dados['data_entrada']),
                     'hora_entrada' => $dados['hora_entrada'],
                     'id_cpf_visitado' => $dados['id_cpf_visitado'],
                     'txt_observacoes' => $dados['txt_observacoes'],
@@ -421,7 +450,7 @@ if (isset($_GET['pesquisaVisita'])) {
                     'id_cartao' => $dados['id_cartao'],
                     'sigla_lotacao' => $dados['sigla_lotacao'],
                     'local_lotacao' => $dados['local_lotacao'],
-                    'desc_lotacao' => $dados['desc_lotacao'],
+                    'desc_lotacao' => utf8_encode($dados['desc_lotacao']),
                     'nome' => $dados['nome'],
                     'nome_serv' => $dados['nome_serv']
                 );
@@ -432,7 +461,8 @@ if (isset($_GET['pesquisaVisita'])) {
             //array_push($send['pesquisa'], $dadosVisit);
             http_response_code(200);
             //echo json_encode($dadosVisit,JSON_PRETTY_PRINT);
-            //print_r($res_send);
+            // print_r($res_send);
+            // exit;
             $msg = $res_send;
             echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             // echo json_encode($res_send, JSON_PRETTY_PRINT);
@@ -447,13 +477,13 @@ if (isset($_GET['pesquisaVisita'])) {
         }
     } else {
         http_response_code(510);
-        $msg ="Esta pessoa não fez visitas ou foi visitada!";
+        $msg = "Esta pessoa não fez visitas ou foi visitada!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         // echo json_encode("CPF ou Nome não existe", JSON_UNESCAPED_UNICODE);
     }
 }
 /** ************************************************************************************ */
-/** **************************** LISTAR USUARIO *************************************** */
+/** **************************** LISTAR USUARIO **************************************** */
 /** ************************************************************************************ */
 if (isset($_GET['pesquisaUsuario'])) {
     $query = $_GET['pesquisaUsuario'];
@@ -472,7 +502,9 @@ if (isset($_GET['pesquisaUsuario'])) {
                     'email' => $dados['email'],
                     'telefone' => $dados['telefone'],
                     'id_tipo_usuario' => $dados['id_tipo_usuario'],
+                    'desc_tipo_usuario' => $dados['desc_tipo_usuario'],
                     'id_sede' => $dados['id_sede'],
+                    'desc_sede' => $dados['desc_sede'],
                     'hashSenha' => $dados['hashSenha']
                 );
             }
@@ -483,10 +515,7 @@ if (isset($_GET['pesquisaUsuario'])) {
             http_response_code(200);
             //echo json_encode($dadosVisit,JSON_PRETTY_PRINT);
             //print_r($res_send);
-            $msg = array(
-                "status" => "Sucesso",
-                "dados" => $res_send
-            );
+            $msg = $res_send;
             echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             // echo json_encode($res_send, JSON_PRETTY_PRINT);
             //echo json_encode($arr);
@@ -508,7 +537,7 @@ if (isset($_GET['pesquisaUsuario'])) {
     }
 }
 /** ************************************************************************************ */
-/** **************************** CADASTRO USUÁRIO *********************************** */
+/** **************************** CADASTRO USUÁRIO ************************************** */
 /** ************************************************************************************ */
 
 if (isset($_GET['cadastroUsuario'])) {
@@ -559,7 +588,7 @@ if (isset($_GET['cadastroUsuario'])) {
 }
 
 /** ************************************************************************************ */
-/** **************************** DELETAR USUARIO ************************************* */
+/** **************************** DELETAR USUARIO *************************************** */
 /** ************************************************************************************ */
 
 if (isset($_GET['deletarUsuario'])) {
@@ -585,7 +614,7 @@ if (isset($_GET['deletarUsuario'])) {
 }
 
 /** ************************************************************************************ */
-/** **************************** ALTERAR USUARIO ************************************* */
+/** **************************** ALTERAR USUARIO *************************************** */
 /** ************************************************************************************ */
 
 if (isset($_GET['alterarUsuario'])) {
@@ -616,7 +645,7 @@ if (isset($_GET['alterarUsuario'])) {
 }
 
 /** ************************************************************************************ */
-/** **************************** LISTAR BLACK LIST *************************************** */
+/** **************************** LISTAR BLACK LIST ************************************* */
 /** ************************************************************************************ */
 if (isset($_GET['pesquisaBlackList'])) {
     $query = $_GET['pesquisaBlackList'];
@@ -628,12 +657,13 @@ if (isset($_GET['pesquisaBlackList'])) {
     if ($dadosVisit != false) {
         if (count($dadosVisit)) {
             foreach ($dadosVisit  as $dados) {
+                $data_saida = ($dados['data_saida'] == null) ? "Ativo" : $dados['data_saida'];
                 $res_send[] = array(
                     'id_black_list' => $dados['id_black_list'],
                     'id_cpf_visitante' => $dados['id_cpf_visitante'],
                     'nome' => $dados['nome'],
-                    'data_entrada' => $dados['data_entrada'],
-                    'data_saida' => $dados['data_saida']
+                    'data_entrada' => $dat->data($dados['data_entrada']),
+                    'data_saida' => $dat->data($data_saida)
                 );
             }
         }
@@ -643,10 +673,7 @@ if (isset($_GET['pesquisaBlackList'])) {
             http_response_code(200);
             //echo json_encode($dadosVisit,JSON_PRETTY_PRINT);
             //print_r($res_send);
-            $msg = array(
-                "status" => "Sucesso",
-                "dados" => $res_send
-            );
+            $msg = $res_send;
             echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
             // echo json_encode($res_send, JSON_PRETTY_PRINT);
             //echo json_encode($arr);
@@ -667,9 +694,9 @@ if (isset($_GET['pesquisaBlackList'])) {
         // echo json_encode("CPF ou Nome não existe", JSON_UNESCAPED_UNICODE);
     }
 }
-/** *************************************************************************************************** */
-/** **************************** ADICIONAR VISITANTE Á BLACK LIST ************************************* */
-/** *************************************************************************************************** */
+/** ************************************************************************************ */
+/** ********************* ADICIONAR VISITANTE Á BLACK LIST ***************************** */
+/** ************************************************************************************ */
 if (isset($_GET['blacklist'])) {
     $id_cpf = $_GET['blacklist'];
 
@@ -692,7 +719,7 @@ if (isset($_GET['blacklist'])) {
         if (count($dadosVisit2)) {
             foreach ($dadosVisit2  as $dados) {
 
-                if($dados['data_saida'] == null){
+                if ($dados['data_saida'] == null) {
                     echo json_encode('Pessoa já cadastrada na Black List!');
                     exit;
                 }
@@ -707,9 +734,9 @@ if (isset($_GET['blacklist'])) {
         }
     }
     // echo json_encode($res_send);
-    
-    
-    
+
+
+
     // echo json_encode($dadosVisit2);
     // echo json_encode($dadosVisit2);
     // int sizeof(array arr);
@@ -717,34 +744,34 @@ if (isset($_GET['blacklist'])) {
     // if (sizeof($dadosVisit2) == 0) {
 
 
-        $query['data_entrada'] = date('d-m-Y');
-        $data = $query['data_entrada'];
-        $data = date("Y-m-d", strtotime(str_replace('/', '-', $data)));
-        $query['data_entrada']  = date('Y-m-d', strtotime($data));
+    $query['data_entrada'] = date('d-m-Y');
+    $data = $query['data_entrada'];
+    $data = date("Y-m-d", strtotime(str_replace('/', '-', $data)));
+    $query['data_entrada']  = date('Y-m-d', strtotime($data));
 
 
-        // echo json_encode($id_cpf);
-        $adicionar = $dat->adicionarBlackList($connect, $id_cpf, $query['data_entrada']);
-        // echo json_encode($adicionar);
-        if ($adicionar == true) {
-            http_response_code(203);
-            echo json_encode('Operação realizada com sucesso!');
-        } else {
-            http_response_code(500);
-            echo json_encode('CPF já cadastrada na black LIst');
-        }
+    // echo json_encode($id_cpf);
+    $adicionar = $dat->adicionarBlackList($connect, $id_cpf, $query['data_entrada']);
+    // echo json_encode($adicionar);
+    if ($adicionar == true) {
+        http_response_code(203);
+        echo json_encode('Operação realizada com sucesso!');
+    } else {
+        http_response_code(500);
+        echo json_encode('CPF já cadastrada na black LIst');
+    }
     // } else {
     //     // echo json_encode('Esse visitante já esta cadastra no Black List');
-        
+
     //     exit;
     // }
 }
-/** *************************************************************************************************** */
-/** **************************** RETIRAR VISITANTE DA BLACK LIST ************************************* */
-/** *************************************************************************************************** */
+/** ************************************************************************************ */
+/** ******************* RETIRAR VISITANTE DA BLACK LIST ******************************** */
+/** ************************************************************************************ */
 if (isset($_GET['retiraBlackList'])) {
     $id_cpf = $_GET['retiraBlackList'];
-    
+
     if (!is_numeric($id_cpf)) {
         echo json_encode('Apenas numeros são aceitos');
     }
@@ -786,11 +813,6 @@ if (isset($_GET['retiraBlackList'])) {
         exit;
     }
 }
-
-
-
-
-
 
 /** ************************************************************************************ */
 /** **************************** LOGAR USUÁRIO ***************************************** */
