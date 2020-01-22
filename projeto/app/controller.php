@@ -412,6 +412,7 @@ if (isset($_GET['cadastroVisita'])) {
 
     $dados = $dat->cadastroVisita($connect, $query);
     if ($dados == true) {
+        http_response_code(200);
         $msg = "Visita Cadastrada Com Sucesso!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE || JSON_PRETTY_PRINT);
         // echo json_encode('deu certo');
@@ -472,7 +473,7 @@ if (isset($_GET['pesquisaVisita'])) {
             $msg_err = 'Erro na pesquisa: ' . $err . "\n";
             // echo $msg_err;
             // set response code - 200 OK
-            http_response_code(511);
+            http_response_code(516);
             echo json_encode($msg_err);
         }
     } else {
@@ -719,7 +720,7 @@ if (isset($_GET['blacklist'])) {
         if (count($dadosVisit2)) {
             foreach ($dadosVisit2  as $dados) {
 
-                if ($dados['data_saida'] == null) {
+                if (($dados['id_cpf_visitante']== $id_cpf) && ($dados['data_saida'] == null)) {
                     echo json_encode('Pessoa já cadastrada na Black List!');
                     exit;
                 }
@@ -758,7 +759,7 @@ if (isset($_GET['blacklist'])) {
         echo json_encode('Operação realizada com sucesso!');
     } else {
         http_response_code(500);
-        echo json_encode('CPF já cadastrada na black LIst');
+        echo json_encode('Servidores não podem ser cadastrados na Black List');
     }
     // } else {
     //     // echo json_encode('Esse visitante já esta cadastra no Black List');

@@ -14,10 +14,10 @@ class Dados
         t1.id_black_list,
         t1.foto_visit,
         t1.orgao_origem
- from db_visitantes.tb_visitante t1
- where id_cpf like '%" . $query . "%' or nome like '%" . $query . "%'
- union all
- select t2.id_cpf,
+        from db_visitantes.tb_visitante t1
+        where id_cpf like '%" . $query . "%' or nome like '%" . $query . "%'
+        union all
+        select t2.id_cpf,
         t2.nome_serv,
         t2.matricula_serv,
         t2.fone_serv,
@@ -26,9 +26,9 @@ class Dados
         0,
         t2.foto_serv,
         null
- from db_coorporativo.tb_servidores t2
- where id_cpf like '%" . $query . "%' or nome_serv like '%" . $query . "%'
- order by nome;";
+        from db_coorporativo.tb_servidores t2
+        where id_cpf like '%" . $query . "%' or nome_serv like '%" . $query . "%'
+        order by nome;";
         // $sql = "select * from tb_visitante where id_cpf like '%" . $query . "%' or nome like '%" . $query . "%';";
         $obj = $connect->prepare($sql);
         $result = ($obj->execute()) ? $obj->fetchAll() : false;
@@ -492,7 +492,7 @@ class Dados
         // echo $id_black_list;
 
         try {
-            $sql = "UPDATE tb_black_list SET data_saida = '$data_saida' WHERE id_cpf_visitante = '$id_cpf';";
+            $sql = "UPDATE tb_black_list SET data_saida = '$data_saida' WHERE id_cpf_visitante = '$id_cpf' AND data_saida is null;";
             $stmt = $connect->prepare($sql);
             $stmt->execute();
 
