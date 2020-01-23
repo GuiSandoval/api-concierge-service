@@ -1,9 +1,20 @@
 <?php
+
+
+// header("Access-Control-Allow-Origin: * ");
+// header("Content-Type: application/json; charset=UTF-8");
+// header("Access-Control-Allow-Methods: POST");
+// header("Access-Control-Max-Age: 3600");
+// header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
 // Allow from any origin
 if (isset($_SERVER['HTTP_ORIGIN'])) {
     header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
     header('Access-Control-Allow-Credentials: true');
+    // header('Authorization: Basic olá');
     header('Access-Control-Max-Age: 86400');    // cache for 1 day
+    // header('WWW-Authenticate: Basic realm="fsdfisdhfouidhfduifshfdsi"');
+
 }
 
 // Access-Control headers are received during OPTIONS requests
@@ -19,9 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 }
 
 require_once('../../vendor/autoload.php');
-require_once('connection.php');
+// require('connection.php');
+require('connection.php');
 
-use \Firebase\JWT\jwt;
+
+use \Firebase\JWT\JWT;
 
 define('SECRET_KEY', 'Super-Secret-Key');  // secret key can be a random string and keep in secret from anyone
 define('ALGORITHM', 'HS256');   // Algorithm used to sign the token
@@ -99,17 +112,22 @@ if ($action == 'login') {
             "message" => "Usuário ou Senha Inválidos"
         );
     }
+    // $_SERVER['HTTP_AUTHORIZATION'] = $jwt;
 }
 // Get Dashboard stuff
 else if ($action == 'stuff') {
-
+    // $_SERVER['HTTP_AUTHORIZATION'] ='teste';
+    // print_r(get_headers('http://localhost/visitantes-sejus/projeto/app/api.php'));
     $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+    echo 'authheader: ',$authHeader;
     $temp_header = explode(" ", $authHeader);
+    print_r($temp_header);
     $jwt = $temp_header[1];
 
     try {
         JWT::$leeway = 10;
         $decoded = JWT::decode($jwt, SECRET_KEY, array(ALGORITHM));
+        print_r($decoded);
 
         // Access is granted. Add code of the operation here 
 
