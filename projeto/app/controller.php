@@ -11,9 +11,11 @@ header("Access-Control-Allow-Origin: *");
 // clearstatcache(); // limpa o cache
 
 require('model.php');
+// require('api.php');
 require('connection.php');
 
 $dat = new Dados();
+// $tok = new Token();
 
 //Pegar URL página 
 $url1 = $_SERVER['SERVER_NAME'];
@@ -553,7 +555,7 @@ if (isset($_GET['cadastroUsuario'])) {
         $nome = $query['nome'];
         $usuario = $query['usuario'];
         $id_tipo_usuario = $query['id_tipo_usuario'];
-        $hashSenha = $query['hashSenha'];
+        $hashSenha = password_hash($query['hashSenha'], PASSWORD_DEFAULT);
         if (empty($nome)) {
             echo json_encode('O Nome está vazio');
         } else if (empty($id_cpf)) {
@@ -833,3 +835,13 @@ if (isset($_GET['logar'])) {
 if (isset($_GET['deslogar'])) {
     //code...
 }
+/** ************************************************************************************ */
+/** *************************** VALIDAR TOKEN ****************************************** */
+/** ************************************************************************************ */
+// if(isset($_GET['validaToken'])){
+//     $token = $_GET['validaToken'];
+
+//     $dados = $tok->validarToken($token);
+//     echo $dados;
+//     // $part = explode (".",$token);
+// }

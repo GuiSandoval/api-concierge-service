@@ -323,7 +323,7 @@ class Dados
         $id_cpf = $query['id_cpf'];
         $nome = $query['nome'];
         $usuario = $query['usuario'];
-        $hashSenha = $query['hashSenha'];
+        $hashSenha = password_hash($query['hashSenha'], PASSWORD_DEFAULT);
         $id_tipo_usuario = $query['id_tipo_usuario'];
         $id_sede = $query['id_sede'];
         $tele = empty($query['telefone']) ? null : $query['telefone'];

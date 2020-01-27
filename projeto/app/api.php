@@ -1,44 +1,18 @@
 <?php
 
-
-// header("Access-Control-Allow-Origin: * ");
-// header("Content-Type: application/json; charset=UTF-8");
-// header("Access-Control-Allow-Methods: POST");
-// header("Access-Control-Max-Age: 3600");
+header("Access-Control-Allow-Origin: * ");
+header("Content-Type: application/json; charset=UTF-8");
+header("Access-Control-Allow-Methods: POST");
+header("Access-Control-Max-Age: 3600");
 // header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-// Allow from any origin
-if (isset($_SERVER['HTTP_ORIGIN'])) {
-    header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
-    header('Access-Control-Allow-Credentials: true');
-    // header('Authorization: Basic olá');
-    header('Access-Control-Max-Age: 86400');    // cache for 1 day
-    // header('WWW-Authenticate: Basic realm="fsdfisdhfouidhfduifshfdsi"');
-
-}
-
-// Access-Control headers are received during OPTIONS requests
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-
-    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
-        header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-
-    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
-        header("Access-Control-Allow-Headers:        {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
-
-    exit(0);
-}
-
 require_once('../../vendor/autoload.php');
-// require('connection.php');
 require('connection.php');
 
 
 use \Firebase\JWT\JWT;
-
-define('SECRET_KEY', 'Super-Secret-Key');  // secret key can be a random string and keep in secret from anyone
-define('ALGORITHM', 'HS256');   // Algorithm used to sign the token
-
+define('SECRET_KEY', base64_encode('3e018c951f88d0e7d1ed3c7bcf94d938SEJUS2020'));  //secret key para fazer a validação do token
+define('ALGORITHM', 'HS256');   // tipo do algoritmo do token 
 
 
 $postdata = file_get_contents("php://input");
@@ -46,47 +20,42 @@ $request = json_decode($postdata);
 
 
 $action = $request->action;
-// $action = 'login';
-// Login section
+// Seção de Login
 if ($action == 'login') {
 
-    $email = $request->email;
-    $password = $request->password;
-
+    $username = $request->username;
 
     //Buscar informações dos Usuários no Banco
     try {
         $sql = "SELECT U.*, T.desc_tipo_usuario, S.desc_sede FROM tb_usuario AS U
         INNER JOIN tb_tipo_usuario AS T ON U.id_tipo_usuario = T.id_tipo_usuario
-        INNER JOIN tb_sede AS S ON U.id_sede = S.id_sede WHERE usuario='" . $email . "' AND hashSenha='" . $password . "';";
+        INNER JOIN tb_sede AS S ON U.id_sede = S.id_sede WHERE usuario='$username' OR id_cpf = '$username';";
         $obj = $connect->prepare($sql);
         $obj->execute();
-        if ($obj->rowCount() == 0) {
-        } else {
-            $user = $obj->fetch(PDO::FETCH_ASSOC);
-        }
+        $user = $obj->fetch(PDO::FETCH_ASSOC);
+        
     } catch (Exception $e) {
         echo 'Erro: ', $e->getMessage(), "\n";
     }
-
-
-
-
-    //A dummy credential match.. you should have some SQl queries to match from databases
-    if ($email == $user['usuario'] && $password == $user['hashSenha']) {
-        $iat = time(); // time of token issued at
+    
+    //Verificar se username ou cpf é compatível com a senha e se senha está correta
+    if (($username == $user['usuario'] || $username == $user['id_cpf'])  && password_verify($request->password,$user['hashSenha'])) {
+        $iat = time(); // Tempo que o tokenn foi gertado
         $nbf = $iat + 1; //not before in seconds
-        $exp = $iat + 600; // expire time of token in seconds
-
+        $exp = $iat + 120; // Tempo em que o token será expirado
+        $iss = $_SERVER['REQUEST_URI'];
+        $nome = $user['nome'];
         $token = array(
-            "iss" => "http://example.org",
-            "aud" => "http://example.com",
+            // "iss" => "http://example.org",
+            "iss" => $iss,
+            // "aud" => "http://example.com",
+            "aud" => $iss,
             "iat" => $iat,
             "nbf" => $nbf,
             "exp" => $exp,
             "data" => array(
                 "id" => 11,
-                "email" => $email
+                "email" => $nome
             )
         );
 
@@ -103,7 +72,7 @@ if ($action == 'login') {
             'username' => 'FreakyJolly',
             'email' => 'contact@freakyjolly.com',
             'status' => "success",
-            'message' => "Login Realizado com Sucesso, Olá " . $email . ""
+            'message' => "Login Realizado com Sucesso, Olá " . $nome . ""
         );
     } else {
         $data_insert = array(
@@ -116,18 +85,18 @@ if ($action == 'login') {
 }
 // Get Dashboard stuff
 else if ($action == 'stuff') {
-    // $_SERVER['HTTP_AUTHORIZATION'] ='teste';
-    // print_r(get_headers('http://localhost/visitantes-sejus/projeto/app/api.php'));
-    $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
-    echo 'authheader: ',$authHeader;
-    $temp_header = explode(" ", $authHeader);
-    print_r($temp_header);
-    $jwt = $temp_header[1];
+    $authHeader = $request->token;
+    $temp_header = explode(".", $authHeader);
+
+    $header = $temp_header[0];
+    $payload = $temp_header[1];
+    $signature = $temp_header[2];
 
     try {
         JWT::$leeway = 10;
-        $decoded = JWT::decode($jwt, SECRET_KEY, array(ALGORITHM));
-        print_r($decoded);
+
+        $decoded = JWT::decode($authHeader, SECRET_KEY, array(ALGORITHM));
+
 
         // Access is granted. Add code of the operation here 
 
@@ -145,11 +114,56 @@ else if ($action == 'stuff') {
 
         $data_insert = array(
             //"data" => $data_from_server,
-            "jwt" => $jwt,
+            "jwt" => $authHeader,
             "status" => "error",
             "message" => $e->getMessage()
         );
     }
 }
+// } else if ($action == 'valid') {
+
+
+
+//     $authHeader = $request->token;
+//     // echo 'authheader: ',$authHeader;
+//     $temp_header = explode(".", $authHeader);
+//     print_r($temp_header);
+//     $jwt = $temp_header[0];
+//     echo $jwt;
+
+//     // echo $token;
+//     exit;
+//     $part = explode(".", $token);
+//     $header = $part[0];
+//     $payload = $part[1];
+//     $signature = $part[2];
+
+//     // echo 'Header = ', $header, '<br>';
+//     // echo 'Payload = ', $payload, '<br>';
+//     // echo 'Signature = ', $signature, '<br>';
+
+//     $valid = hash_hmac('sha256', "$header.$payload", SECRET_KEY, true);
+//     $valid = base64_encode($valid);
+
+
+//     echo 'Secret key ', $valid, '<br>';
+//     echo 'signature ', $signature;
+//     // echo $valid;
+//     if (SECRET_KEY == $signature) {
+//         echo " valid";
+//     } else {
+//         echo ' invalid';
+//     }
+//     exit;
+// }
 
 echo json_encode($data_insert);
+// print_r( $data_insert);
+// print_r (json_encode($data_insert));
+
+
+
+        // exi
+    
+
+// echo json_encode($data_insert);
