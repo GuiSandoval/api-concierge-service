@@ -1,4 +1,5 @@
 <?php
+require('functions.php');
 require('connection.php');
 class Dados
 {
@@ -135,37 +136,39 @@ class Dados
     public function alterarVisitante($connect, $connectc, $query)
     {
         $id_cpf = $query['id_cpf'];
-
-        $select = Dados::pesquisaVisitante($connect, $connectc, $id_cpf);
-
+        $select = Dados::pesquisaVisitante($connect,$connectc, $id_cpf);
         if ($select == false) {
             $resultFinal = false;
         } else {
-            $tele = empty($query['telefone']) ? null : $query['telefone'];
-            $ci = empty($query['ci']) ? null : $query['ci'];
-            $matricula = empty($query['matricula']) ? null : $query['matricula'];
-            $cargo = empty($query['cargo']) ? null : $query['cargo'];
-            $foto_visit = empty($query['foto_visit']) ? null : $query['foto_visit'];
-            $orgao_origem = empty($query['orgao_origem']) ? null : $query['orgao_origem'];
+            try {
+                $tele = empty($query['telefone']) ? null : $query['telefone'];
+                $ci = empty($query['ci']) ? null : $query['ci'];
+                $matricula = empty($query['matricula']) ? null : $query['matricula'];
+                $cargo = empty($query['cargo']) ? null : $query['cargo'];
+                $foto_visit = empty($query['foto_visit']) ? null : $query['foto_visit'];
+                $orgao_origem = empty($query['orgao_origem']) ? null : $query['orgao_origem'];
+    
+                $sql = "update tb_visitante set telefone = ?, ci = ?, matricula = ?, cargo = ?,foto_visit = ?, orgao_origem = ? where id_cpf = ?";
+    
+                $statement = $connect->prepare($sql);
+    
+                $statement->bindParam(1, $tele);
+                $statement->bindParam(2, $ci);
+                $statement->bindParam(3, $matricula);
+                $statement->bindParam(4, $cargo);
+                $statement->bindParam(5, $foto_visit);
+                $statement->bindParam(6, $orgao_origem);
+                $statement->bindParam(7, $id_cpf);
+    
+                $statement->execute();
+                $resultFinal = ($statement->rowCount() === 0 ) ? false : true;
+                // var_dump($statement);
+            } catch (PDOException $e) {
+                echo $e;
+                $resultFinal = false;
 
-            $sql = "update tb_visitante set telefone = ?, ci = ?, matricula = ?, cargo = ?,foto_visit = ?, orgao_origem = ? where id_cpf = ?";
-
-            $statement = $connect->prepare($sql);
-
-            $statement->bindParam(1, $tele);
-            $statement->bindParam(2, $ci);
-            $statement->bindParam(3, $matricula);
-            $statement->bindParam(4, $cargo);
-            $statement->bindParam(5, $foto_visit);
-            $statement->bindParam(6, $orgao_origem);
-            $statement->bindParam(7, $id_cpf);
-
-            $statement->execute();
-
-
-            // var_dump($statement);
-
-            $resultFinal = true;
+            }
+           
         }
         return $resultFinal;
     }
@@ -267,6 +270,8 @@ class Dados
         } catch (PDOException $e) {
             // printf("%s","Erro : " . $e->getMessage().$e);
             echo "ERROR: $e";
+            $resultFinal = false;
+
         }
 
         return $resultFinal;
@@ -288,12 +293,13 @@ class Dados
     //FUNÇÂO PESQUISAR VISITA
     public function pesquisaVisita($connect, $query)
     {
+        $id_cpf = $query;
         try {
             $sql = "SELECT V.*, L.sigla_lotacao, L.local_lotacao, L.desc_lotacao , VI.nome, S.nome_serv
                 FROM (tb_visita AS V
                 INNER JOIN db_coorporativo.tb_lotacao AS L ON V.id_lotacao_visita = L.id_lotacao
                 INNER JOIN tb_visitante AS VI ON V.id_cpf= VI.id_cpf
-                INNER JOIN db_coorporativo.tb_servidores AS S ON V.id_cpf_visitado = S.id_cpf) ORDER BY data_entrada DESC , hora_entrada DESC;";
+                INNER JOIN db_coorporativo.tb_servidores AS S ON V.id_cpf_visitado = S.id_cpf) WHERE V.id_cpf LIKE '%" . $query . "%' OR V.id_cpf_visitado LIKE '%" . $query . "%' ORDER BY data_entrada DESC , hora_entrada DESC;";
 
             $obj = $connect->prepare($sql);
             $result = ($obj->execute()) ? $obj->fetchAll() : false;
