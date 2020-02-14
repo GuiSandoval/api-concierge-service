@@ -33,15 +33,15 @@ if (isset($_GET['pesquisa'])) {
         if (count($dadosVisit)) {
             foreach ($dadosVisit  as $dados) {
                 $res_send[] = array(
-                    'id_cpf' => $dados['id_cpf'],
-                    'nome' => $dados['nome'],
-                    'matricula' => $dados['matricula'],
-                    'telefone' => $dados['telefone'],
-                    'ci' => $dados['ci'],
-                    'cargo' => $dados['cargo'],
+                    'id_cpf'        => $dados['id_cpf'],
+                    'nome'          => $dados['nome'],
+                    'matricula'     => $dados['matricula'],
+                    'telefone'      => $dados['telefone'],
+                    'ci'            => $dados['ci'],
+                    'cargo'         => $dados['cargo'],
                     'id_black_list' => $dados['id_black_list'],
-                    'foto_visit' => $dados['foto_visit'],
-                    'orgao_origem' => $dados['orgao_origem'],
+                    'foto_visit'    => $dados['foto_visit'],
+                    'orgao_origem'  => $dados['orgao_origem'],
                 );
             }
         }
@@ -56,9 +56,19 @@ if (isset($_GET['pesquisa'])) {
             echo json_encode($msg_err);
         }
     } else {
-        http_response_code(501);
-
-        $msg = "CPF ou Nome não existe!";
+        // http_response_code(501);
+        $msg[] = array(
+            'id_cpf'        =>  '',
+            'nome'          =>  '',
+            'matricula'     =>  '',
+            'telefone'      =>  '',
+            'ci'            =>  '',
+            'cargo'         =>  '',
+            'id_black_list' =>  '',
+            'foto_visit'    =>  '',
+            'orgao_origem'  =>  ''
+        ) ;
+        // $msg = "CPF ou Nome não existe!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         // echo json_encode("CPF ou Nome não existe", JSON_UNESCAPED_UNICODE);
     }
@@ -159,38 +169,50 @@ if (isset($_GET['cadastro'])) {
     //  echo $postdata;
     if (isset($postdata) && !empty($postdata)) {
         $query = json_decode($postdata, true);
-        // print_r($query);
-        // print_r($postdata);
         $id_cpf = $query['id_cpf'];
         $nome = $query['nome'];
-
         if (empty($nome)) {
-            http_response_code(502);
-            echo json_encode('O Nome está vazio');
+            // http_response_code(500);
+            $msg = array(
+                "status" => "error",
+                "dados" => "O nome está vazio"
+            );
+            echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            exit;
         } else if (empty($id_cpf)) {
-            http_response_code(503);
-            echo json_encode('O campo CPF está vazio');
+            // http_response_code(500);
+            $msg = array(
+                "status" => "error",
+                "dados" => "O CPF está vazio"
+            );
+            echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            exit;
         } else if (strlen($id_cpf) < 11) {
-            http_response_code(509);
-            echo json_encode('O campo CPF deve ter no mínimo 11 caracteres');
+            // http_response_code(500);
+            $msg = array(
+                "status" => "error",
+                "dados" => "O CPF está vazio"
+            );
+            echo json_encode($msg,JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            exit;
         } else {
             $cadastro = $dat->cadastroVisitante($connect, $connectC, $query);
             // print_r ($query);
             if ($cadastro == true) {
-                http_response_code(201);
+                http_response_code(200);
                 $msg = array(
-                    "status" => "Sucesso",
+                    "status" => "success",
                     "dados" => "Cadastro realizado com sucesso!"
                 );
                 echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
                 // echo json_encode('Cadastro realizado com sucesso');
             } else {
-                http_response_code(504);
-                // $msg = array(
-                //     "status" => "Erro",
-                //     "dados" => "O CPF $id_cpf já está cadastrado!"
-                // );
-                $msg = "O CPF $id_cpf já está cadastrado!";
+                http_response_code(500);
+                $msg = array(
+                    "status" => "error",
+                    "dados" => "O CPF $id_cpf já está cadastrado!"
+                );
+                // $msg = "O CPF $id_cpf já está cadastrado!";
                 echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
                 // echo json_encode('O CPF ' . $id_cpf . ' já está cadastrado!');
             }
@@ -203,24 +225,20 @@ if (isset($_GET['cadastro'])) {
 /** ************************************************************************************ */
 if (isset($_GET['alterar'])) {
     $postdata = file_get_contents("php://input");
-    // echo $postdata;
-    // echo $postdata;
     $query = json_decode($postdata, true);
-    // echo json_encode($query);
     $alterar = $dat->alterarVisitante($connect, $connectC, $query);
-
     if ($alterar == true) {
         http_response_code(202);
         $msg = array(
-            "status" => "Sucesso",
+            "status" => "success",
             "dados" => "Visitante Alterado com Sucesso!"
         );
         echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         // echo json_encode('Visitante Alterado com Sucesso');
     } else {
-        http_response_code(505);
+        // http_response_code(505);
         $msg = array(
-            "status" => "Erro",
+            "status" => "error",
             "dados" => "Erro ao alterar CPF!"
         );
         echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
