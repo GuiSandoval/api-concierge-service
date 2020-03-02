@@ -3,6 +3,8 @@ date_default_timezone_set('America/Belem');
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Methods", "DELETE, POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 header("meta charset=UTF-8");
 header("Content-Type: application/json; charset=UTF-8");
 header("Cache-Control: no-cache, no-store, must-revalidate"); // limpa o cache
@@ -406,19 +408,19 @@ if (isset($_GET['cadastroVisita'])) {
     $vVisit = $dat->pesquisaVisitante($connect, $connectC, $visit);
     $vLotac = $dat->pesquisaLocal($connectC, $lotac);
     if ($vServ == false) { 
-        http_response_code(512);
+        // http_response_code(512);
         $msg =  "Esse Servidor não existe";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE);
         exit;
     }
     if ($vVisit == false) {
-        http_response_code(513);
+        // http_response_code(513);
         $msg ="Deu um erro ao verificar Visitante!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE);
         exit;
     }
     if ($vLotac == false) {
-        http_response_code(514);
+        // http_response_code(514);
         $msg ="Local de Visita é inválido!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE);
         exit;
@@ -432,12 +434,12 @@ if (isset($_GET['cadastroVisita'])) {
 
     $dados = $dat->cadastroVisita($connect, $query);
     if ($dados == true) {
-        http_response_code(200);
+        // http_response_code(200);
         $msg = "Visita Cadastrada Com Sucesso!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE || JSON_PRETTY_PRINT);
         // echo json_encode('deu certo');
     } else {
-        http_response_code(515);
+        // http_response_code(515);
         $msg ="Ops! Ocorreu um erro ao cadastrar Visita, Tente novamente!";
         echo json_encode($msg, JSON_UNESCAPED_UNICODE || JSON_PRETTY_PRINT);
         // echo json_encode('Deu ruim');
@@ -551,9 +553,21 @@ if (isset($_GET['pesquisaUsuario'])) {
     } else {
         $msg = array(
             "status" => "Erro",
-            "dados" => "Esta pessoa não fez visitas ou foi visitada!"
+            "dados" => "Este usuário Não existe!"
         );
-        echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $msg2[] =array(
+            'id_cpf'                => '',
+            'nome'                  => '',
+            'usuario'               => '',
+            'email'                 => '',
+            'telefone'              => '',
+            'id_tipo_usuario'       => '',
+            'desc_tipo_usuario'     => '',
+            'id_sede'               => '',
+            'desc_sede'             => '',
+            'hashSenha'             => ''
+        );
+        echo json_encode($msg2, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         // echo json_encode("CPF ou Nome não existe", JSON_UNESCAPED_UNICODE);
     }
 }
@@ -590,7 +604,7 @@ if (isset($_GET['cadastroUsuario'])) {
             if ($cadastro == true) {
                 http_response_code(201);
                 $msg = array(
-                    "status" => "Sucesso",
+                    "status" => "success",
                     "dados" => "Cadastro realizado com sucesso!"
                 );
                 echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -598,7 +612,7 @@ if (isset($_GET['cadastroUsuario'])) {
             } else {
                 http_response_code(500);
                 $msg = array(
-                    "status" => "Erro",
+                    "status" => "error",
                     "dados" => "O CPF $id_cpf já está cadastrado!"
                 );
                 echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -625,11 +639,19 @@ if (isset($_GET['deletarUsuario'])) {
         $deletar = $dat->deletarUsuario($connect, $id_cpf);
         // echo json_encode($deletar);
         if ($deletar == true) {
-            http_response_code(203);
-            echo json_encode('Usuário deletado com sucesso');
+            // http_response_code(203);
+            $msg = array(
+                'status' => 'success',
+                'dados' => 'Usuário deletado com Sucesso'
+            );
+            echo json_encode($msg, JSON_PRETTY_PRINT||JSON_UNESCAPED_UNICODE);
         } else {
-            http_response_code(500);
-            echo json_encode('Este usuário já foi deletado ou não existe!');
+            // http_response_code(500);
+            $msg = array(
+                'status' => 'error',
+                'dados' => 'Usuário ja foi deletado'
+            );
+            echo json_encode($msg, JSON_PRETTY_PRINT||JSON_UNESCAPED_UNICODE);
         }
     }
 }
@@ -644,20 +666,21 @@ if (isset($_GET['alterarUsuario'])) {
     // echo $postdata;
     $query = json_decode($postdata, true);
     // echo json_encode($query);
+
     $alterar = $dat->alterarUsuario($connect, $query);
 
     if ($alterar == true) {
-        http_response_code(202);
+        // http_response_code(202);
         $msg = array(
-            "status" => "Sucesso",
+            "status" => "success",
             "dados" => "Usuario Alterado com Sucesso!"
         );
         echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
         // echo json_encode('Visitante Alterado com Sucesso');
     } else {
-        http_response_code(500);
+        // http_response_code(500);
         $msg = array(
-            "status" => "Erro",
+            "status" => "error",
             "dados" => "Erro ao alterar o usuario!"
         );
         echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -854,12 +877,50 @@ if (isset($_GET['deslogar'])) {
     //code...
 }
 /** ************************************************************************************ */
-/** *************************** VALIDAR TOKEN ****************************************** */
+/** *************************** PESQUISAR TIPO USUÁRIO *************************************** */
 /** ************************************************************************************ */
-// if(isset($_GET['validaToken'])){
-//     $token = $_GET['validaToken'];
-
-//     $dados = $tok->validarToken($token);
-//     echo $dados;
-//     // $part = explode (".",$token);
-// }
+if(isset($_GET['pesquisaTipoUser'])){
+    $dadosPesq = $dat->pesquisaTipoUser($connect);
+    // print_r($dadosPesq);
+    if($dadosPesq != false && count($dadosPesq)){
+        foreach ($dadosPesq as $dados) {
+            // print_r($dados);
+            // exit;
+            $res_send[]= array(
+                'id_tipo_usuario' => $dados['id_tipo_usuario'],
+                'desc_tipo_usuario' => $dados['desc_tipo_usuario']
+            );
+        }
+        echo json_encode($res_send, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }else{
+        $msg = array(
+            'status' => 'error',
+            'dados' => 'Ocorreu um erro ao realizar a requisição'
+        );
+        echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+}
+/** ************************************************************************************ */
+/** *************************** PESQUISAR TIPO SEDE *************************************** */
+/** ************************************************************************************ */
+if(isset($_GET['pesquisaSede'])){
+    $dadosPesq = $dat->pesquisaSede($connect);
+    // print_r($dadosPesq);
+    if($dadosPesq != false && count($dadosPesq)){
+        foreach ($dadosPesq as $dados) {
+            // print_r($dados);
+            // exit;
+            $res_send[]= array(
+                'id_sede' => $dados['id_sede'],
+                'desc_sede' => $dados['desc_sede']
+            );
+        }
+        echo json_encode($res_send, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }else{
+        $msg = array(
+            'status' => 'error',
+            'dados' => 'Ocorreu um erro ao realizar a requisição'
+        );
+        echo json_encode($msg, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+}

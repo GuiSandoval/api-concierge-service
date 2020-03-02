@@ -299,7 +299,7 @@ class Dados
                 FROM (tb_visita AS V
                 INNER JOIN db_coorporativo.tb_lotacao AS L ON V.id_lotacao_visita = L.id_lotacao
                 INNER JOIN tb_visitante AS VI ON V.id_cpf= VI.id_cpf
-                INNER JOIN db_coorporativo.tb_servidores AS S ON V.id_cpf_visitado = S.id_cpf) WHERE V.id_cpf LIKE '%" . $query . "%' OR V.id_cpf_visitado LIKE '%" . $query . "%' ORDER BY data_entrada DESC , hora_entrada DESC;";
+                LEFT JOIN db_coorporativo.tb_servidores AS S ON V.id_cpf_visitado = S.id_cpf) WHERE V.id_cpf LIKE '%" . $query . "%' OR V.id_cpf_visitado LIKE '%" . $query . "%' ORDER BY data_entrada DESC , hora_entrada DESC;";
 
             $obj = $connect->prepare($sql);
             $result = ($obj->execute()) ? $obj->fetchAll() : false;
@@ -409,32 +409,55 @@ class Dados
         if ($select == false) {
             $resultFinal = false;
         } else {
+           try {
             $id_cpf = $query['id_cpf'];
+            $nome = $query['nome'];
             $usuario = $query['usuario'];
-            $hashSenha = $query['hashSenha'];
+            // $hashSenha = $query['hashSenha'];
+            $hashSenha = password_hash($query['hashSenha'], PASSWORD_DEFAULT);
+
             $id_tipo_usuario = $query['id_tipo_usuario'];
             $id_sede = $query['id_sede'];
             $tele = empty($query['telefone']) ? null : $query['telefone'];
             $email = empty($query['email']) ? null : $query['email'];
 
-            $sql = "update tb_usuario set telefone = ?, usuario = ?, hashSenha = ?, id_tipo_usuario = ?, id_sede = ? , email = ? where id_cpf = ?";
+            // $sql = "UPDATE tb_usuario set telefone = ?, usuario = ?, hashSenha = ?, id_tipo_usuario = ?, id_sede = ? , email = ?, nome=? where id_cpf = ?";
+            $sql = "UPDATE tb_usuario set telefone = :telefone, usuario = :usuario, hashSenha = :hashSenha, id_tipo_usuario = :id_tipo_usuario, id_sede = :id_sede , email = :email, nome=:nome where id_cpf = :id_cpf";
 
             $statement = $connect->prepare($sql);
 
-            $statement->bindParam(1, $tele);
-            $statement->bindParam(2, $usuario);
-            $statement->bindParam(3, $hashSenha);
-            $statement->bindParam(4, $id_tipo_usuario);
-            $statement->bindParam(5, $id_sede);
-            $statement->bindParam(6, $email);
-            $statement->bindParam(7, $id_cpf);
+            // $statement->bindParam(1, $tele);
+            // $statement->bindParam(2, $usuario);
+            // $statement->bindParam(3, $hashSenha);
+            // $statement->bindParam(4, $id_tipo_usuario);
+            // $statement->bindParam(5, $id_sede);
+            // $statement->bindParam(6, $email);
+            // $statement->bindParam(7, $id_cpf);
+            // $statement->bindParam(8, $nome);
+            $statement->execute(array(
+                ':id_cpf' => $id_cpf,
+                ':nome' => $nome,
+                ':usuario' => $usuario,
+                ':email' => $email,
+                ':telefone' => $tele,
+                ':id_tipo_usuario' => $id_tipo_usuario,
+                ':id_sede' => $id_sede,
+                ':hashSenha' => $hashSenha
+            ));
 
-            $statement->execute();
+
+            // $statement->execute();
+            $resultFinal = true;
+
+           } catch (\Exception $e) {
+            var_dump($e->getMessage());
+        }
+
+            
 
 
             // var_dump($statement);
 
-            $resultFinal = true;
         }
         return $resultFinal;
     }
@@ -526,5 +549,30 @@ class Dados
         } else {
             return date("d/m/Y", strtotime($data));
         }
+    }
+    public function pesquisaTipoUser($connect){
+
+        try {
+            $sql = "SELECT * FROM db_visitantes.tb_tipo_usuario;";
+            $stmt = $connect->prepare($sql);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            echo "Erro: " . $e->getMessage();
+            exit;
+        }
+        $resultFinal = $stmt->rowCount() != 0 ? $stmt->fetchAll(): false;
+        return $resultFinal;
+    }
+    public function pesquisaSede($connect){
+        try {
+            $sql = 'SELECT * FROM db_visitantes.tb_sede;';
+            $stmt = $connect ->prepare($sql);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            echo "Erro: " . $e->getMessage();
+            exit;
+        }
+        $resultFinal = $stmt->rowCount() ? $stmt->fetchAll() : false ;
+        return $resultFinal;
     }
 }
